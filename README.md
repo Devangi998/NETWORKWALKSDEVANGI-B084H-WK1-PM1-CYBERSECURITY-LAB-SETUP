@@ -1,4 +1,4 @@
-# 🔐 Cybersecurity Lab Environment Setup
+ 🔐 Cybersecurity Lab Environment Setup
 
 *Building an isolated virtual lab for penetration testing and ethical hacking practice*
 
@@ -42,7 +42,11 @@ This isolated environment serves as the foundational testing bed for:
 ---
 
 ## 🏗️ Lab Architecture
-![Lab Topology](1-screenshot-title-image.png)
+ <img width="1346" height="616" alt="1-screenshot-title-image" src="https://github.com/user-attachments/assets/c2dedac4-6f1f-4272-862b-2624e7e76b6e" />
+
+
+
+
 
 *The isolated NAT Network allows both external package management/updates and intra-lab communication for future vulnerable machines.*
 
@@ -59,7 +63,7 @@ This isolated environment serves as the foundational testing bed for:
 | 📡 Network CIDR | `10.0.0.0/24` |
 | 🐧 Kali Static IP | `10.0.0.2/24` |
 | 🚪 Default Gateway | `10.0.0.1` |
-| 🌍 Preferred DNS | `8.8.8.8` |
+| 🌍 Preferred DNS | `10.0.0.1` |
 | 📁 Shared Folder | Host `/downloads` (Auto-mount enabled) |
 | 📋 Clipboard / Drag & Drop | Bidirectional |
 | 🔮 Future Target Range | `10.0.0.3` – `10.0.0.99` |
@@ -79,7 +83,8 @@ A private virtual network was defined in VirtualBox's Network Manager:
 * **DHCP:** Enabled
 * **IPv6:** Disabled
 
-![VirtualBox NAT Network](2-screenshot-network-settings-1.png)
+<img width="1920" height="1080" alt="2-screenshot-network-settings-1 png" src="https://github.com/user-attachments/assets/28288039-15f1-4f9d-82f6-1483a17a50b8" />
+
 
 ### Step 3. Import Kali Linux VM
 * Kali Linux virtual appliance was imported into VirtualBox.
@@ -88,14 +93,17 @@ A private virtual network was defined in VirtualBox's Network Manager:
 * **Shared Folders:** Added host `/downloads` mapped to `downloads` with Auto-mount enabled.
 * **Network Adapter 1:** Attached to **NAT Network**, selecting `NatNetwork`.
 
-![Kali VM Settings](3-screenshot-kali-linux.png)
+<img width="1920" height="922" alt="3-screenshot-kali-linux png" src="https://github.com/user-attachments/assets/e624385f-0349-491e-9598-6de89138f975" />
+
 
 ### Step 4. Configure Kali Network Settings
+<img width="1920" height="923" alt="4-screenshot-kali-network-settings png" src="https://github.com/user-attachments/assets/9872e38a-f2ff-454c-9416-ccc9e3c6a0b3" />
+
 Configured a persistent static IP address on `eth0`:
 * **IPv4 Address:** `10.0.0.2`
 * **Subnet Mask:** `255.255.255.0` (`/24`)
 * **Default Gateway:** `10.0.0.1`
-* **DNS:** `8.8.8.8`
+* **DNS:** `10.0.0.1`
 
 Applied via NetworkManager CLI:
 ```bash
@@ -106,6 +114,55 @@ sudo nmcli connection modify "Wired connection 1" ipv4.method manual
 sudo nmcli connection modify "Wired connection 1" ipv4.dad-timeout 0
 sudo nmcli connection down "Wired connection 1"
 sudo nmcli connection up "Wired connection 1"
-Step 5. Create a Clean VM Baseline SnapshotSnapshot Name: Clean Kali - Network SetupCreated immediately after confirming connectivity to ensure a known-good restore point before performing security assessments or tool installs.🔎 Lab Verification✅ Test🧾 Command🎯 Expected Result🌐 Check IP Assignmentip aInterface eth0 displays 10.0.0.2/24📡 Test Gateway Reachabilityping -c 4 10.0.0.10% packet loss🌍 Test External Reachabilityping -c 4 8.8.8.80% packet loss🔎 Test DNS Resolutionnslookup networkwalks.comResolves domain IP🧰 Verify Security Toolingnmap --versionNmap version successfully displayed🐞 Problems Encountered & SolutionsProblem 1: VirtualBox GUI Hiding Network ConfigurationIssue: VirtualBox 7 was initially set to Basic Mode, which suppressed the NAT Network management interface.Resolution: Navigated to File > Preferences > Interface / Experience Mode, switched the setting from Basic to Expert Mode, and opened the Network Manager directly from the Tools panel.Problem 2: Internet Connectivity Lost After Static IP ConfigurationIssue: In VirtualBox 7 with recent Kali Linux builds, duplicate address detection (DAD) timeout conflicts can cause default route stalls when assigning manual IPv4 addresses.Resolution: Adjusted the connection settings using NetworkManager CLI:Bashsudo nmcli connection modify "Wired connection 1" ipv4.dad-timeout 0
-sudo nmcli connection up "Wired connection 1"
-Outbound connectivity and name resolution resumed immediately.💡 What I LearnedNAT vs. NAT Network: A standard NAT adapter isolates each VM into its own private sandbox behind the host, preventing inter-VM communication. A NAT Network creates a shared virtual switch where all connected lab machines can communicate with each other while maintaining outbound access.Deterministic Static Addressing: Setting predictable static IP schemes simplifies documentation, port scanning, and routing during penetration tests.Snapshot Management: Establishing a clean initial snapshot guarantees an instant recovery mechanism without needing to reinstall or reconfigure the OS from scratch.🔗 Tools & ResourcesVirtualBoxKali Linux Downloads7-Zip👤 AuthorDevangi — Aspiring Cybersecurity ProfessionalProgram: Cybersecurity at Networkwalks (Batch B083)
+```
+### Step 5. Create a Clean VM Baseline Snapshot
+* **Snapshot Name:** `Clean Kali - Network Setup`
+* Created immediately after confirming connectivity to ensure a known-good restore point before performing security assessments or tool installs.
+
+---
+
+# 🔎 Lab Verification
+
+| ✅ Test | 🧾 Command | 🎯 Expected Result |
+| :--- | :--- | :--- |
+| 🌐 Check IP Assignment | `ip a` | Interface `eth0` displays `10.0.0.2/24` |
+| 📡 Test Gateway Reachability | `ping -c 4 10.0.0.1` | 0% packet loss |
+| 🌍 Test External Reachability | `ping -c 4 8.8.8.8` | 0% packet loss |
+| 🔎 Test DNS Resolution | `nslookup networkwalks.com` | Resolves domain IP |
+| 🧰 Verify Security Tooling | `nmap --version` | Nmap version successfully displayed |
+
+---
+
+# 🐞 Problems Encountered & Solutions
+
+### Problem 1: VirtualBox GUI Hiding Network Configuration
+* **Issue:** VirtualBox 7 was initially set to Basic Mode, which suppressed the NAT Network management interface.
+* **Resolution:** Navigated to **File > Preferences > Interface / Experience Mode**, switched the setting from **Basic** to **Expert Mode**, and opened the Network Manager directly from the Tools panel.
+
+### Problem 2: Internet Connectivity Lost After Static IP Configuration
+* **Issue:** In VirtualBox 7 with recent Kali Linux builds, duplicate address detection (DAD) timeout conflicts can cause default route stalls when assigning manual IPv4 addresses.
+* **Resolution:** Adjusted the connection settings using NetworkManager CLI:
+  ```bash
+  sudo nmcli connection modify "Wired connection 1" ipv4.dad-timeout 0
+  sudo nmcli connection up "Wired connection 1"
+  ```
+  ---
+
+# 💡 What I Learned
+* **NAT vs. NAT Network:** A standard NAT adapter isolates each VM into its own private sandbox behind the host, preventing inter-VM communication. A **NAT Network** creates a shared virtual switch where all connected lab machines can communicate with each other while maintaining outbound access.
+* **Deterministic Static Addressing:** Setting predictable static IP schemes simplifies documentation, port scanning, and routing during penetration tests.
+* **Snapshot Management:** Establishing a clean initial snapshot guarantees an instant recovery mechanism without needing to reinstall or reconfigure the OS from scratch.
+
+---
+
+# 🔗 Tools & Resources
+* [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
+* [Kali Linux Downloads](https://www.kali.org/get-kali/#kali-virtual-machines)
+* [7-Zip](https://7-zip.org/download.html)
+
+---
+
+# 👤 Author
+* **Devangi** — Aspiring Cybersecurity Professional
+* **Program:** Cybersecurity at Networkwalks (Batch B084H)
+  
